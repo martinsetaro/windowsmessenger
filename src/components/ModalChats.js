@@ -10,8 +10,8 @@ import {
 
 export default function ModalChats({btnEnviar}){
     return(
-<SafeAreaView>
-    <View>
+
+    <View >
         <Text>
             Zona de Chats
         </Text>
@@ -23,8 +23,10 @@ export default function ModalChats({btnEnviar}){
             </Text>
         </Pressable>
     </View>
-</SafeAreaView>
+
 
 
     );
 }
+
+

@@ -1,6 +1,6 @@
 import React , { useState , useEffect , useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View , ImageBackground , SafeAreaView , Image , TextInput , Pressable ,ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View , ImageBackground , SafeAreaView , Image , TextInput , Pressable ,ActivityIndicator , Alert } from 'react-native';
 import gradienteBg from './assets/gradienteMessenger.png';
 import msg from './assets/msg.png';
 import * as Font from 'expo-font';
@@ -11,6 +11,9 @@ import Modal from 'react-native-modal';
 import ModalCarga from './src/components/ModalCarga';
 import ModalChats from './src/components/ModalChats';
 import axios from 'axios';
+import { Audio } from 'expo-av';
+
+
 
 
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +27,11 @@ export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [isFirstModalVisible, setFirstModalVisible] = useState(false);
   const [isSecondModalVisible, setSecondModalVisible] = useState(false);
+  const [loading,setLoading] = useState(false);
+  const [sound, setSound] = useState();
+
+  
+  
 
   useEffect(() => {
     async function prepare() {
@@ -32,6 +40,14 @@ export default function App() {
         await Font.loadAsync({
           'tahoma': require('./assets/fonts/tahoma.ttf'),
         });
+        const loadSound = async () => {
+          const { sound } = await Audio.Sound.createAsync(
+            require('./assets/msnsound.mp3')
+          );
+          setSound(sound);
+          
+        };
+        loadSound();
       } catch (e) {
         console.warn(e);
       } finally {
@@ -40,7 +56,31 @@ export default function App() {
     }
 
     prepare();
+
+    return () => {
+      // Desmontar el componente y liberar el sonido
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
   }, []);
+
+  const playSound = async () => {
+    if (sound) {
+      try {
+        await sound.playAsync();
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
+    } else {
+      Alert.alert('Error', 'Sound not loaded');
+    }
+  };
+
+  
+ 
+  
+  
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
@@ -66,35 +106,46 @@ export default function App() {
   };
 
   
+  
 
   // Hace peticion y validacion 
 
   const postData = async () => {
    
-    toggleFirstModal()
+    !loading && setFirstModalVisible(!isFirstModalVisible)
+   
 
     try {
-      const response = await axios.post(`https://3977-181-118-10-23.ngrok-free.app/validateEmail/${email}/${pass}`, null, {
+      const response = await axios.post(`https://connectionwindowmsn-d5b9decyd6aqfthq.eastus-01.azurewebsites.net/validateEmail/${email}/${pass}`, null, {
           headers: {
               'Content-Type': 'application/json',
           },
       });
 
       if (response.status === 200) {
-          toggleSecondModal();
-          setFirstModalVisible(!isFirstModalVisible);
+        setFirstModalVisible(false)
+        setEmail("");
+        setPass("");
+        toggleSecondModal();
+         
       }
+      
   } catch (error) {
-      console.error('Error:', error);
+      playSound();
+      Alert.alert("Error", "Usuario no registrado");
+      setFirstModalVisible(false)
+        setEmail("");
+        setPass("");
   }
 }
   
 
   const handleFetch =  () => {
     postData();
-  
+   
   }
-        
+  
+  
   
   return (
     <ImageBackground
@@ -175,13 +226,17 @@ export default function App() {
   
         <StatusBar style="auto" />
       </SafeAreaView>
-      <Modal isVisible={isFirstModalVisible}>
+      <Modal isVisible={isFirstModalVisible}
+       style={{ margin: 0 }}
+      >
         <View style={styles.modalContentLogin}>
          <ModalCarga/>
         </View>
       </Modal>
 
-      <Modal isVisible={isSecondModalVisible}>
+      <Modal isVisible={isSecondModalVisible}
+       style={{ margin: 0 }}
+      >
         <View style={styles.modalContentLogin}>
           <ModalChats
           btnEnviar={toggleSecondModal}
@@ -285,6 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    flex:1
+    flex:1,
+    
   },
 });
