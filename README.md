@@ -1,6 +1,7 @@
 # Como crear una APK de android usando Expo
 
-Primero instalamos el EAS ( Expo Aplication Service) que sirve para guardar nuestro proyecto en expo.
+Primero instalamos el EAS ( Expo Aplication Service) que sirve para guardar nuestro proyecto en expo
+
 **npm install -g eas-cli**
 
 Nos logueamos en EXPO 
